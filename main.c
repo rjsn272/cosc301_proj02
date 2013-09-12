@@ -19,6 +19,8 @@ int main(int argc, char **argv) {
 	char* cmt = "#";
 	pid_t pid;
 	int seq = 0;
+	int numcommands = 0;
+	int i = 0;
 	printf("%s","type here:  ");
 	fflush(stdout);
 	char buffer[1024];
@@ -26,10 +28,17 @@ int main(int argc, char **argv) {
 	char* cmttoken;
 	char *cmd[] = { "/bin/ls", "-ltr", ".", NULL };
 	while (fgets(buffer, 1024, stdin) !=NULL) {
-		cmttoken = strtok(buffer, cmt)+'\0'; //Nothing included after first '#'
+		cmttoken = strtok(buffer, cmt); //Nothing included after first '#'
+		numcommands = 0;
+		for(i=0;cmttoken[i]!=NULL;i++){
+			if (cmttoken[i]==';')
+				numcommands++;
+		}
+		i=0;
+		char **commands[numcommands+1];
 		token = strtok(cmttoken, delim); //cmttoken is strictly the non-commented code
-		
-		//asume parallel unless user switches out
+		commands[i]=token;
+		//assume parallel unless user switches out
 		//if not one of our speciall instructions, fork
 		//in fork, update the cmd array to be token (user instruction)
 		//execv
@@ -67,7 +76,9 @@ int main(int argc, char **argv) {
 					execv(cmd[0],cmd);
 				}
 			}
+			i++;
 			token = strtok(NULL, delim); //next token in line
+			commands[i]=token;
 		}
 		if (seq == 1) { //if sequential acctivated, go to sequential
 			sequential();
