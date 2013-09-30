@@ -13,6 +13,7 @@
 
 
 int main(int argc, char **argv) {
+	
 	char* delim = ";";
 	int comment = 0;
 	printf("%s","type here:  ");
@@ -25,13 +26,13 @@ int main(int argc, char **argv) {
 		token = strtok(buffer, delim);
 		printf("%s\n","2");
 		while (token!=NULL && comment!=1){ //itterate the line sepearted by ;
-						printf("%s\n",token);
+			printf("%s\n",token);
 			if (strchr(token,"#") ==0){ //if comment, break
 					comment = 1;
-					printf("%s\n","HERE!!!");
+					break; //break if comment
 			}		
 
-			token = strtok(NULL, delim);
+			token = strtok(NULL, delim); //next token in line
 		}
 	}
 
