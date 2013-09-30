@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <string.h>
+#include <strings.h>
 #include <ctype.h>
 #include <sys/resource.h>
 #include <sys/wait.h>
@@ -20,22 +21,55 @@ int main(int argc, char **argv) {
 	fflush(stdout);
 	char buffer[1024];
 	char* token;
-	printf("%s\n","testing");
 	while (fgets(buffer, 1024, stdin) !=NULL) {
-		printf("%s\n","1");
 		token = strtok(buffer, delim);
-		printf("%s\n","2");
 		while (token!=NULL && comment!=1){ //itterate the line sepearted by ;
 			printf("%s\n",token);
-			if (strchr(token,"#") ==0){ //if comment, break
+			//if comment, break --NOT WORKING
+			/*if (strchr(token,"#") ==0){ 
 					comment = 1;
-					break; //break if comment
-			}		
+					break;
+			}*/
+
+			//mode parallel, call new function
+			if (strncmp(token,"mode parallel", 13)==0) {
+				parallel(buffer);
+			}
+			if (strncmp(token,"mode p",6)==0) {
+				parallel();
+			}
+
+			//mode sequential, call new function
+			if (strncmp(token,"mode sequential",14)==0) {
+				sequential();
+			}
+			if (strncmp(token,"mode s",6)==0) {
+				sequential();
+			}			
+	
+			
+			//if exit, exit
+			if (strncmp(token,"exit\n",4)==0) {
+				printf("%s\n","test");
+				exit(0);
+			}
+
 
 			token = strtok(NULL, delim); //next token in line
 		}
+		printf("%s","type here:  ");
+		fflush(stdout);		
 	}
 
 	return 0;
 }
 
+void sequential (char* currentLine) { //use if sequential is called
+
+	printf("%s\n","mode sequential indeed");
+}
+
+void parallel (char* currentLine) { //use if parallel is called
+
+	printf("%s\n","mode parallel indeed");
+}
