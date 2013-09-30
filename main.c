@@ -35,25 +35,28 @@ int main(int argc, char **argv) {
 			if (strncmp(token,"mode parallel", 13)==0) {
 				parallel(buffer);
 			}
-			if (strncmp(token,"mode p",6)==0) {
+			else if (strncmp(token,"mode p",6)==0) {
 				parallel();
 			}
 
 			//mode sequential, call new function
-			if (strncmp(token,"mode sequential",14)==0) {
+			else if (strncmp(token,"mode sequential",14)==0) {
 				sequential();
 			}
-			if (strncmp(token,"mode s",6)==0) {
+			else if (strncmp(token,"mode s",6)==0) {
 				sequential();
 			}			
 	
 			
 			//if exit, exit
-			if (strncmp(token,"exit\n",4)==0) {
+			else if (strncmp(token,"exit\n",4)==0) {
 				printf("%s\n","test");
 				exit(0);
 			}
+			else {
 
+				//run command
+			}
 
 			token = strtok(NULL, delim); //next token in line
 		}
