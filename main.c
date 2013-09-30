@@ -14,8 +14,13 @@
 
 int main(int argc, char **argv) {
 
-    printf("main.c, so lonely.  no code here yet :-(\n");
+	printf("%s","type here:  ");
+	fflush(stdout);
+	char buffer[1024];
+	while (fgets(buffer, 1024, stdin) !=NULL) {
+		printf("%s\n","test");
+	}
 
-    return 0;
+	return 0;
 }
 
