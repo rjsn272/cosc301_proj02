@@ -16,13 +16,16 @@
 int main(int argc, char **argv) {
 	
 	char* delim = ";";
+	char* cmt = "#";
 	int comment = 0;
 	printf("%s","type here:  ");
 	fflush(stdout);
 	char buffer[1024];
 	char* token;
+	char* cmttoken;
 	while (fgets(buffer, 1024, stdin) !=NULL) {
-		token = strtok(buffer, delim);
+		cmttoken = strtok(buffer, cmt)+'\0'; //Nothing included after first '#'
+		token = strtok(cmttoken, delim); //cmttoken is strictly the non-commented code
 		while (token!=NULL && comment!=1){ //itterate the line sepearted by ;
 			printf("%s\n",token);
 			//if comment, break --NOT WORKING
