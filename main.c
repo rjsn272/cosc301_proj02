@@ -17,51 +17,60 @@ int main(int argc, char **argv) {
 	
 	char* delim = ";";
 	char* cmt = "#";
-	int comment = 0;
+	pid_t pid;
+	int seq = 0;
 	printf("%s","type here:  ");
 	fflush(stdout);
 	char buffer[1024];
 	char* token;
 	char* cmttoken;
+	char *cmd[] = { "/bin/ls", "-ltr", ".", NULL };
 	while (fgets(buffer, 1024, stdin) !=NULL) {
 		cmttoken = strtok(buffer, cmt)+'\0'; //Nothing included after first '#'
 		token = strtok(cmttoken, delim); //cmttoken is strictly the non-commented code
-		while (token!=NULL && comment!=1){ //itterate the line sepearted by ;
+		
+		//asume parallel unless user switches out
+		//if not one of our speciall instructions, fork
+		//in fork, update the cmd array to be token (user instruction)
+		//execv
+		while (token!=NULL){ //itterate the line sepearted by ;
+			printf("%s","current token:  ");
 			printf("%s\n",token);
-			//if comment, break --NOT WORKING
-			/*if (strchr(token,"#") ==0){ 
-					comment = 1;
-					break;
-			}*/
-
-			//mode parallel, call new function
-			if (strncmp(token,"mode parallel", 13)==0) {
-				parallel(buffer);
-			}
-			else if (strncmp(token,"mode p",6)==0) {
-				parallel();
+			//if exit, exit
+			if (strncmp(token,"exit\n",4)==0) {
+				exit(0);
 			}
 
 			//mode sequential, call new function
 			else if (strncmp(token,"mode sequential",14)==0) {
-				sequential();
+				seq = 1;
 			}
 			else if (strncmp(token,"mode s",6)==0) {
-				sequential();
-			}			
-	
-			
-			//if exit, exit
-			else if (strncmp(token,"exit\n",4)==0) {
-				printf("%s\n","test");
-				exit(0);
+				seq = 1;
 			}
+
+			//if mode, print mode type 
+			//mode parallel, call new function
+			/*if (strncmp(token,"mode parallel", 13)==0) {
+				parallel(buffer);
+			}
+			else if (strncmp(token,"mode p",6)==0) {
+				parallel();
+			}*/	
 			else {
-
-				//run command
+				if ((pid=fork())==-1) { //if fork fail, error
+					perror("Fork ERROR");
+				}
+				if (pid==0) { //if child, execv
+					printf("%s\n","I Forked");
+					strcpy(cmd[1],token);
+					execv(cmd[0],cmd);
+				}
 			}
-
 			token = strtok(NULL, delim); //next token in line
+		}
+		if (seq == 1) { //if sequential acctivated, go to sequential
+			sequential();
 		}
 		printf("%s","type here:  ");
 		fflush(stdout);		
@@ -70,12 +79,14 @@ int main(int argc, char **argv) {
 	return 0;
 }
 
-void sequential (char* currentLine) { //use if sequential is called
-
+void sequential (char* token) { //use if sequential is called
 	printf("%s\n","mode sequential indeed");
+
+	
 }
 
 void parallel (char* currentLine) { //use if parallel is called
 
 	printf("%s\n","mode parallel indeed");
+	
 }
