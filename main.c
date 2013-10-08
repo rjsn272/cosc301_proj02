@@ -14,7 +14,6 @@
 #include "proj02.h"
 
 int main(int argc, char **argv) {
-	//tokenify("test;bob");
 	sequential();
 	return 0;
 }
@@ -35,7 +34,6 @@ void sequential () { //use if sequential is called
 		cmttoken = strtok(buffer, cmt); //Nothing included after first '#'
 		linefinal = tokenify(cmttoken); 
 		
-
 		if ((pid=fork())<0) { //if fork fail, error
 			perror("Fork ERROR"); //should we exit
 		}
@@ -45,8 +43,9 @@ void sequential () { //use if sequential is called
 				printf("%s","current token:  ");
 				printf("%s\n",linefinal[i]);
 				//if exit, exit
-				if (strncmp(linefinal[i],"exit\n",4)==0) {
+				if (strncmp(linefinal[i],"exit",3)==0) {
 					//exit(0);
+					printf("%s\n","?!?!?!");
 					exitSwitch = 1;
 				}
 
@@ -68,14 +67,18 @@ void sequential () { //use if sequential is called
 		}
 		else {
 			int wc = wait(NULL);
+			//problem because the child process gets here, exits, and then the parent 			process' exitSwitch is equal to 0
+			printf("%s\n","here");
+			if (exitSwitch == 1) {
+				exit(0);
+			}
+			if (par == 1) { //if sequential acctivated, go to parallel
+				parallel();
+		}
 		}
 		//parent wait
-		if (exitSwitch == 1) {
-			exit(0);
-		}
-		if (par == 1) { //if sequential acctivated, go to parallel
-			parallel();
-		}
+		printf("%\d\n",exitSwitch);
+
 		printf("%s","type here:  ");
 		fflush(stdout);		
 	}
@@ -83,7 +86,7 @@ void sequential () { //use if sequential is called
 	
 }
 
-void parallel (char* currentLine) { //use if parallel is called
+void parallel () { //use if parallel is called
 
 	printf("%s\n","mode parallel indeed");
 	
