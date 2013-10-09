@@ -124,13 +124,17 @@ void parallel (char** linefinal) { //use if parallel is called
 					fprintf(stderr, "execv failed: %s\n", strerror(errno));
 				}
 			}
-			else {
+			else if (pidArray[i]>0) {
 				printf("%s","current Parent pid:  ");
 				printf("%d\n",pidArray[i]);
-				waitpid(pidArray[i], &status, 0); 	//parent wait	
+				
 			}
 		}
 		i++;
+	}
+	i = 0;
+	for (;i<sizeof(pidArray);i++){	
+		waitpid(pidArray[i], &status, 0); 	//parent wait	
 	}
 	
 }
