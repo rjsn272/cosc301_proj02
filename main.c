@@ -20,7 +20,8 @@ int main(int argc, char **argv) {
 
 void sequential () { //use if sequential is called
 	char* cmt = "#";
-	int exitSwitch = 0;
+	int exitSwitch = (int)malloc(sizeof(int));
+	exitSwitch=0;
 	pid_t pid;
 	int par = 0;
 	int i = 0;
@@ -34,18 +35,9 @@ void sequential () { //use if sequential is called
 		cmttoken = strtok(buffer, cmt); //Nothing included after first '#'
 		linefinal = tokenify(cmttoken); 
 		
-		if ((pid=fork())<0) { //if fork fail, error
-			perror("Fork ERROR"); //should we exit
-		}
-		else if (pid==0) { //if child, execv
-			printf("%s\n","I Forked");
-			while (linefinal[i]!=NULL){ //itterate the line sepearted by ;
-				printf("%s","current token:  ");
-				printf("%s\n",linefinal[i]);
-				//if exit, exit
+		//while loop to check exit and mode switch
+		while (linefinal[i]!=NULL){ //itterate the line sepearted by ;
 				if (strncmp(linefinal[i],"exit",3)==0) {
-					//exit(0);
-					printf("%s\n","?!?!?!");
 					exitSwitch = 1;
 				}
 
@@ -56,6 +48,24 @@ void sequential () { //use if sequential is called
 				else if (strncmp(linefinal[i],"mode p",6)==0) {
 					par = 1;
 				}
+				i++;
+		}
+
+		if ((pid=fork())<0) { //if fork fail, error
+			perror("Fork ERROR"); //should we exit
+		}
+		else if (pid==0) { //if child, execv
+			printf("%s\n","I Forked");
+			while (linefinal[i]!=NULL){ //itterate the line sepearted by ;
+				printf("%s","current token:  ");
+				printf("%s\n",linefinal[i]);
+				//ask Sommers if this if is OK
+				if (strncmp(linefinal[i],"exit",3)==0) {
+				}
+				else if (strncmp(linefinal[i],"mode parallel",14)==0) {
+				}
+				else if (strncmp(linefinal[i],"mode p",6)==0) {
+				}
 				else{
 					execv(linefinal[i],linefinal);
 					printf("%s","test   :");
@@ -65,24 +75,23 @@ void sequential () { //use if sequential is called
 			}
 
 		}
-		else {
-			int wc = wait(NULL);
-			//problem because the child process gets here, exits, and then the parent 			process' exitSwitch is equal to 0
-			printf("%s\n","here");
-			if (exitSwitch == 1) {
-				exit(0);
-			}
+		else if (pid>0) {
+			int wc = wait(NULL); 	//parent wait
+			printf("%s\n","got to parent");
 			if (par == 1) { //if sequential acctivated, go to parallel
 				parallel();
+			}
 		}
-		}
-		//parent wait
-		printf("%\d\n",exitSwitch);
 
-		printf("%s","type here:  ");
+		printf("%s","exit switch: ");
+		printf("%d\n",exitSwitch);
+		if (exitSwitch == 1) {
+			exit(0);
+		}
+
 		fflush(stdout);		
 	}
-
+	free(exitSwitch);
 	
 }
 
