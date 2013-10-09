@@ -12,6 +12,7 @@
 #include <poll.h>
 #include <signal.h>
 #include "proj02.h"
+#include <errno.h>
 
 int main(int argc, char **argv) {
 	char* cmt = "#";
@@ -29,7 +30,8 @@ int main(int argc, char **argv) {
 	char **linefinal= (char **)malloc(sizeof(char**));
 	while (fgets(buffer, 1024, stdin) !=NULL) {
 		cmttoken = strtok(buffer, cmt); //Nothing included after first '#'
-		linefinal = tokenify(cmttoken); 
+		linefinal = tokenify(cmttoken);
+		i=0; 
 
 		//while loop to check exit and mode switch
 		while (linefinal[i]!=NULL){ //itterate the line sepearted by ;
@@ -66,9 +68,10 @@ int main(int argc, char **argv) {
 
 void sequential (char** linefinal) { //use if sequential is called
 	int i = 0;
+	int status;
 	printf("%s\n","got to seq");
-	pid_t pid;
-	if ((pid=fork())<0) { //if fork fail, error
+	pid_t pid = fork();
+	if (pid<0) { //if fork fail, error
 		perror("Fork ERROR"); //should we exit
 	}
 	//child
@@ -77,6 +80,7 @@ void sequential (char** linefinal) { //use if sequential is called
 		while (linefinal[i]!=NULL){ //itterate the line sepearted by ;
 			printf("%s","current token:  ");
 			printf("%s\n",linefinal[i]);
+
 			//ask Sommers if this if is OK
 			if (strncmp(linefinal[i],"exit",3)==0) {
 			}
@@ -85,19 +89,22 @@ void sequential (char** linefinal) { //use if sequential is called
 			else if (strncmp(linefinal[i],"mode p",6)==0) {
 			}
 			else{
-				//execv(linefinal[i],linefinal);
+				if (execv(linefinal[0], linefinal) < 0) {
+					fprintf(stderr, "execv failed: %s\n", strerror(errno));
+			    	}
 				printf("%s","test   :");
 				printf("%s\n",linefinal[i]);
 			}
 			i++;
 		}
-
 	}
 	//parent
-	else (pid>0) {
-		int wc = wait(NULL); 	//parent wait
+	else {
+		printf("%d\n",1);
+		waitpid(pid, &status, 0); 	//parent wait
 		printf("%s\n","got to parent");
 	}
+	printf("%s\n","bottom");
 	
 }
 
