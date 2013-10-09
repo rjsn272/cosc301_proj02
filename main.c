@@ -30,11 +30,15 @@ int main(int argc, char **argv) {
 	char **linefinal= (char **)malloc(sizeof(char**));
 	while (fgets(buffer, 1024, stdin) !=NULL) {
 		cmttoken = strtok(buffer, cmt); //Nothing included after first '#'
-		linefinal = tokenify(cmttoken);
+		linefinal = tokenify(cmttoken,";");
 		i=0; 
+		//printf("%s","Second:  ");
+		//printf("%s\n",linefinal[1]);
 
 		//while loop to check exit and mode switch
 		while (linefinal[i]!=NULL){ //itterate the line sepearted by ;
+			printf("%s","current token:  ");			
+			printf("%s\n",linefinal[i]);			
 			if (strncmp(linefinal[i],"exit",3)==0) {
 				exitSwitch = 1;
 			}
@@ -58,17 +62,18 @@ int main(int argc, char **argv) {
 			sequential(linefinal);
 		}
 		if (par ==1){
-			parallel();
+			parallel(linefinal);
 		}
-
-
+		fflush(stdout);
+		printf("%s","type here:  ");
 	}
 	return 0;
 }
 
-void sequential (char** linefinal) { //use if sequential is called
+int sequential (char** linefinal) { //use if sequential is called
 	int i = 0;
 	int status;
+	char **arrayToExec= NULL;
 	printf("%s\n","got to seq");
 	pid_t pid = fork();
 	if (pid<0) { //if fork fail, error
@@ -78,18 +83,13 @@ void sequential (char** linefinal) { //use if sequential is called
 	else if (pid==0) { //if child, execv
 		printf("%s\n","I Forked");
 		while (linefinal[i]!=NULL){ //itterate the line sepearted by ;
-			printf("%s","current token:  ");
-			printf("%s\n",linefinal[i]);
 
+			arrayToExec = tokenify(linefinal[i],"\n,\t, ");
+			printf("%s","current token:  ");
+			printf("%s\n",arrayToExec[i]);
 			//ask Sommers if this if is OK
-			if (strncmp(linefinal[i],"exit",3)==0) {
-			}
-			else if (strncmp(linefinal[i],"mode parallel",14)==0) {
-			}
-			else if (strncmp(linefinal[i],"mode p",6)==0) {
-			}
-			else{
-				if (execv(linefinal[0], linefinal) < 0) {
+			if (isBuiltIn(linefinal[i])==0) {
+				if (execv(arrayToExec[0], arrayToExec) < 0) {
 					fprintf(stderr, "execv failed: %s\n", strerror(errno));
 			    	}
 				printf("%s","test   :");
@@ -104,35 +104,71 @@ void sequential (char** linefinal) { //use if sequential is called
 		waitpid(pid, &status, 0); 	//parent wait
 		printf("%s\n","got to parent");
 	}
-	printf("%s\n","bottom");
-	
+	return 0;	
 }
 
-void parallel () { //use if parallel is called
+int parallel (char** linefinal) { //use if parallel is called
 
-	printf("%s\n","mode parallel indeed");
+	int i = 0;
+	pid_t pid = fork();
+	char ** arrayToExec = NULL;
+
+	while (linefinal[i]!=NULL){
+		arrayToExec = tokenify(linefinal[i],"\n,\t, ");
+		pid_t pid = fork();
+		if (pid<0) { //if fork fail, error
+			perror("Fork ERROR"); //should we exit
+		}	
+		if (pid==0) {
+			if (execv(arrayToExec[0], arrayToExec) < 0) {
+				fprintf(stderr, "execv failed: %s\n", strerror(errno));
+			}
+		}
+		else {
+
+		}
+		i++;
 	
-}
 
-char **tokenify(const char *string) {
-	const char *sep = ";";
-	char *tmp, *word;
-	char *s = strdup(string);
-	int num_tokens = 0;
-	for(word=strtok_r(s,sep,&tmp);word != NULL;word=strtok_r(NULL,sep,&tmp)){
-		printf("%s\n",word);
-		num_tokens++;		
 	}
+	return 0;
 	
-	char ** final = (char**)malloc((num_tokens+1) * sizeof(char*));
-        int i = 0;
+}
 
-	for(word=strtok_r(s,sep,&tmp);word != NULL;word=strtok_r(NULL,sep,&tmp)){
-                final[i++] = strdup(word);            
-        }
-
-	final[i] = NULL;
+int isBuiltIn(char* linefinal) {
+	//char* linefinal = linefinal;
+	if (strncmp(linefinal,"exit",3)==0) {
+		return 1;
+	}
+	else if (strncmp(linefinal,"mode parallel",14)==0) {
+		return 1;
+	}
+	else if (strncmp(linefinal,"mode p",6)==0) {
+		return 1;
+	}
+	return 0;
+}
+char** tokenify(const char *str, const char *delim) {
+	char *sep = strdup(delim);
+	char *temp, *word;
+	char *s = strdup(str);
+	int counter = 0;
+	for (word = strtok_r(s, sep, &temp); word != NULL; word = strtok_r(NULL, sep, &temp)) {
+		counter++;		
+	}
 	free(s);
-
-	return final;			
+	counter++;
+	char **array = (char**)malloc(sizeof(char*) * counter);
+	int x = 0;
+	char *temp1, *word1;
+	char *s1 = strdup(str);
+	
+	for (word1 = strtok_r(s1, sep, &temp1); word1 != NULL; word1 = strtok_r(NULL, sep, &temp1)) {
+		array[x]= strdup(word1);		
+		x++;
+	}	
+	free(s1);
+	array[x]=NULL;
+	return array;
+	
 }

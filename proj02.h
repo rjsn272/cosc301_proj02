@@ -5,8 +5,9 @@
 
 
 
-void parallel();
-void sequential();
-char **tokenify(const char *string);
+int parallel(char ** linefinal);
+int sequential(char** linefinal);
+char **tokenify(const char *string, const char *delim);
+int isBuiltInt(char* linefinal);
 
 #endif // __LAB02_H__
