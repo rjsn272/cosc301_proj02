@@ -130,8 +130,6 @@ int parallel (char** linefinal) { //use if parallel is called
 			printf("%s\n","got to parent");		
 		}
 		i++;
-	
-
 	}
 	return 0;
 	
