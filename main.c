@@ -19,8 +19,8 @@ int main(int argc, char **argv) {
 	int exitSwitch = (int)malloc(sizeof(int));
 	exitSwitch=0;
 
-	int par = 0;
-	int seq = 1;
+	int par = 1;
+	int seq =0;
 	int i = 0;
 	printf("%s","type here:  ");
 	fflush(stdout);
@@ -95,6 +95,7 @@ int sequential (char** linefinal) { //use if sequential is called
 				printf("%s","test   :");
 				printf("%s\n",linefinal[i]);
 			}
+			printf("%s\n","HERE!!!");
 			i++;
 		}
 	}
@@ -108,24 +109,25 @@ int sequential (char** linefinal) { //use if sequential is called
 }
 
 int parallel (char** linefinal) { //use if parallel is called
-
+	int status;
 	int i = 0;
 	pid_t pid = fork();
 	char ** arrayToExec = NULL;
-
+	pid_t pidArray[sizeof(linefinal)];
 	while (linefinal[i]!=NULL){
 		arrayToExec = tokenify(linefinal[i],"\n,\t, ");
-		pid_t pid = fork();
-		if (pid<0) { //if fork fail, error
+		pidArray[i] = fork();
+		if (pidArray[i]<0) { //if fork fail, error
 			perror("Fork ERROR"); //should we exit
 		}	
-		if (pid==0) {
+		if (pidArray[i]==0) {
 			if (execv(arrayToExec[0], arrayToExec) < 0) {
 				fprintf(stderr, "execv failed: %s\n", strerror(errno));
 			}
 		}
 		else {
-
+			waitpid(pidArray[i], &status, 0); 	//parent wait
+			printf("%s\n","got to parent");		
 		}
 		i++;
 	
