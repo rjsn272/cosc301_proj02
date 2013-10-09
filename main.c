@@ -22,7 +22,7 @@ int main(int argc, char **argv) {
 	int par = 1;
 	int seq =0;
 	int i = 0;
-	printf("%s","type here:  ");
+	printf("%s","prompt>  ");
 	fflush(stdout);
 	char buffer[1024];
 	char* cmttoken;
@@ -46,15 +46,19 @@ int main(int argc, char **argv) {
 			//mode parallel, call new function
 			else if (strncmp(linefinal[i],"mode parallel",14)==0) {
 				par = 1;
+				seq = 0;
 			}
 			else if (strncmp(linefinal[i],"mode p",6)==0) {
 				par = 1;
+				seq = 0;
 			}
 			else if (strncmp(linefinal[i],"mode sequential",14)==0) {
 				seq = 1;
+				par = 0;
 			}
 			else if (strncmp(linefinal[i],"mode s",6)==0) {
 				seq = 1;
+				par = 0;
 			}
 			i++;
 		}
@@ -64,74 +68,70 @@ int main(int argc, char **argv) {
 		if (par ==1){
 			parallel(linefinal);
 		}
+		if (exitSwitch == 1) {
+			exit(0);
+		}
 		fflush(stdout);
-		printf("%s","type here:  ");
+		printf("%s","prompt>  ");
 	}
 	return 0;
 }
 
-int sequential (char** linefinal) { //use if sequential is called
-	int i = 0;
-	int status;
-	char **arrayToExec= NULL;
-	printf("%s\n","got to seq");
-	pid_t pid = fork();
-	if (pid<0) { //if fork fail, error
-		perror("Fork ERROR"); //should we exit
-	}
-	//child
-	else if (pid==0) { //if child, execv
-		printf("%s\n","I Forked");
-		while (linefinal[i]!=NULL){ //itterate the line sepearted by ;
-
-			arrayToExec = tokenify(linefinal[i],"\n,\t, ");
-			printf("%s","current token:  ");
-			printf("%s\n",arrayToExec[i]);
-			//ask Sommers if this if is OK
-			if (isBuiltIn(linefinal[i])==0) {
-				if (execv(arrayToExec[0], arrayToExec) < 0) {
-					fprintf(stderr, "execv failed: %s\n", strerror(errno));
-			    	}
-				printf("%s","test   :");
-				printf("%s\n",linefinal[i]);
-			}
-			printf("%s\n","HERE!!!");
-			i++;
-		}
-	}
-	//parent
-	else {
-		printf("%d\n",1);
-		waitpid(pid, &status, 0); 	//parent wait
-		printf("%s\n","got to parent");
-	}
-	return 0;	
-}
-
-int parallel (char** linefinal) { //use if parallel is called
+void sequential (char** linefinal) { //use if sequential is called
+	printf("%s\n","Got to Sequential");
 	int status;
 	int i = 0;
-	pid_t pid = fork();
 	char ** arrayToExec = NULL;
 	pid_t pidArray[sizeof(linefinal)];
 	while (linefinal[i]!=NULL){
-		arrayToExec = tokenify(linefinal[i],"\n,\t, ");
-		pidArray[i] = fork();
-		if (pidArray[i]<0) { //if fork fail, error
-			perror("Fork ERROR"); //should we exit
-		}	
-		if (pidArray[i]==0) {
-			if (execv(arrayToExec[0], arrayToExec) < 0) {
-				fprintf(stderr, "execv failed: %s\n", strerror(errno));
+		if (isBuiltIn(linefinal[i])==0){
+			arrayToExec = tokenify(linefinal[i],"\n,\t, ");
+			pidArray[i] = fork();
+			if (pidArray[i]<0) { //if fork fail, error
+				perror("Fork ERROR"); //should we exit
+			}	
+			if (pidArray[i]==0) {
+				if (execv(arrayToExec[0], arrayToExec) < 0) {
+					fprintf(stderr, "execv failed: %s\n", strerror(errno));
+				}
 			}
-		}
-		else {
-			waitpid(pidArray[i], &status, 0); 	//parent wait
-			printf("%s\n","got to parent");		
+			else {
+				waitpid(pidArray[i], &status, 0); 	//parent wait	
+			}
 		}
 		i++;
 	}
-	return 0;
+		
+}
+
+void parallel (char** linefinal) { //use if parallel is called
+	printf("%s\n","Got to Parallel");
+	int status;
+	int i = 0;
+	char ** arrayToExec = NULL;
+	pid_t pidArray[sizeof(linefinal)];
+	while (linefinal[i]!=NULL){
+		if (isBuiltIn(linefinal[i])==0){
+			arrayToExec = tokenify(linefinal[i],"\n,\t, ");
+			pidArray[i] = fork();
+			if (pidArray[i]<0) { //if fork fail, error
+				perror("Fork ERROR"); //should we exit
+			}	
+			if (pidArray[i]==0) {
+				printf("%s","current pid:  ");
+				printf("%d\n",pidArray[i]);
+				if (execv(arrayToExec[0], arrayToExec) < 0) {
+					fprintf(stderr, "execv failed: %s\n", strerror(errno));
+				}
+			}
+			else {
+				printf("%s","current Parent pid:  ");
+				printf("%d\n",pidArray[i]);
+				waitpid(pidArray[i], &status, 0); 	//parent wait	
+			}
+		}
+		i++;
+	}
 	
 }
 
@@ -146,6 +146,15 @@ int isBuiltIn(char* linefinal) {
 	else if (strncmp(linefinal,"mode p",6)==0) {
 		return 1;
 	}
+	else if (strncmp(linefinal,"mode sequential",15)==0) {
+		return 1;
+	}
+	else if (strncmp(linefinal,"mode s",6)==0) {
+		return 1;
+	}
+	else if (strncmp(linefinal,"\n",2)==0) {
+		return 1;
+	}	
 	return 0;
 }
 char** tokenify(const char *str, const char *delim) {

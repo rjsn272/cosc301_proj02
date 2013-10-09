@@ -5,8 +5,8 @@
 
 
 
-int parallel(char ** linefinal);
-int sequential(char** linefinal);
+void parallel(char ** linefinal);
+void sequential(char** linefinal);
 char **tokenify(const char *string, const char *delim);
 int isBuiltInt(char* linefinal);
 
