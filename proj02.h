@@ -1,12 +1,15 @@
 #ifndef __PROJ02_H__
 #define __PROJ02_H__
 
+struct node {
+    const char* path;
+    struct node *next; 
+};
 
-
-
-
-void parallel(char ** linefinal);
-void sequential(char** linefinal);
+void list_insert(const char* path, struct node **head);
+void readFile(struct node **head);
+void parallel(char ** linefinal, struct node **head);
+void sequential(char** linefinal, struct node **head);
 char **tokenify(const char *string, const char *delim);
 int isBuiltInt(char* linefinal);
 
