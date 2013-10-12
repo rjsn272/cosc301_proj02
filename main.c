@@ -151,10 +151,10 @@ int main(int argc, char **argv) {
 					}
 					i++;
 				}	
-				if (exitSwitch==1){
-					run=0;
-				}
 			} //child end
+						/*if (exitSwitch==1) {
+							run=0;
+						}*/
 			else {
 
 					while (linefinal[i]!=NULL){ //itterate the line sepearted by ;		
@@ -171,10 +171,10 @@ int main(int argc, char **argv) {
 						}
 						else if (strncmp(linefinal[i],"mode",4)==0) {
 							if (seq == 0) {
-								printf("%s\n","Mode: Parallel");
+								//printf("%s\n","Mode: Parallel");
 							}
 							if (seq == 1) {
-								printf("%s\n","Mode:  Sequential");
+								//printf("%s\n","Mode:  Sequential");
 							}
 						}
 						//jobs command
@@ -209,24 +209,25 @@ int main(int argc, char **argv) {
 						    printf("%s\n",tempString[1]);
 						}
 
+
 						headPidTemp = headPidTemp2;
 						i++;
 
 					}
+						
 					}
 
 			//loop to wait
 			i=0;
 			headPidTemp = headPid;
 			headPidTemp2 = headPid;
+
 			while(headPid!=NULL) {	
 
 				pidStatus = waitpid(headPid->pid, &status, WNOHANG); //parent wait, without hang
 				if (pidStatus!=0) {
+
 					headPid->working=0;
-					//if switch
-
-
 
 					strcpy(cmdToPrint,headPid->cmd);
 					cmdToPrint[strlen(headPid->cmd)-1]='\0';//strip newline
