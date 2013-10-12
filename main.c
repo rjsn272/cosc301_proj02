@@ -83,7 +83,7 @@ int main(int argc, char **argv) {
 	int run = 1;
 	char buffer[1024];
 	char* cmttoken;
-	char* tempString;
+	char** tempString;
 	int whichBuiltIn;
 	char **paths = (char **)malloc(sizeof(char**));
 	char **linefinal= (char **)malloc(sizeof(char**));
@@ -104,6 +104,7 @@ int main(int argc, char **argv) {
 
 	printf("%s","prompt>  "); //print promot
 	fflush(stdout);
+
 	while (run) {
 	rv = poll(&pfd, 1, 100);
 		if (rv == 0) { //if no typing
@@ -112,7 +113,7 @@ int main(int argc, char **argv) {
 			printf("%s\n",""); 
 			fgets(buffer, 1024, stdin);
 			pidArray = fork();
-
+			printf("%d\n",pidArray);
 			list_insertPid(pidArray,&headPid,buffer);
 				cmttoken = strtok(buffer, cmt); //Nothing included after first '#'
 				linefinal = tokenify(cmttoken,";");
@@ -154,18 +155,8 @@ int main(int argc, char **argv) {
 					run=0;
 				}
 			} //child end
-		
-			//loop to wait
-			i=0;
-			headPidTemp = headPid;
-			headPidTemp2 = headPid;
-			while(headPid!=NULL) {	
+			else {
 
-				pidStatus = waitpid(headPid->pid, &status, WNOHANG); //parent wait, without hang
-				//printf("%d\n",headPid->pid);
-				if (pidStatus!=0) {
-					headPid->working=0;
-					//if switch
 					while (linefinal[i]!=NULL){ //itterate the line sepearted by ;		
 						if (strncmp(linefinal[i],"exit",4)==0) {
 							exitSwitch = 1;
@@ -206,10 +197,15 @@ int main(int argc, char **argv) {
 						}
 						
 						else if (strncmp(linefinal[i],"pause",5)==0) {
-									printf("%s\n",linefinal[i]);
 									tempString = tokenify(linefinal[i]," ,\t");
-									//kill(linefinal[1], SIGSTOP);
-									printf("%s","HERE:  ");
+									kill(tempString[1], SIGSTOP);
+									printf("%s","PAUSED PROCESS:  ");
+									printf("%s\n",tempString[1]);
+						}
+						else if (strncmp(linefinal[i],"pause",5)==0) {
+									tempString = tokenify(linefinal[i]," ,\t");
+									kill(tempString[1], SIGSTOP);
+									printf("%s","PAUSED PROCESS:  ");
 									printf("%s\n",tempString[1]);
 						}
 
@@ -217,6 +213,20 @@ int main(int argc, char **argv) {
 						i++;
 
 					}
+					}
+
+			//loop to wait
+			i=0;
+			headPidTemp = headPid;
+			headPidTemp2 = headPid;
+			while(headPid!=NULL) {	
+
+				pidStatus = waitpid(headPid->pid, &status, WNOHANG); //parent wait, without hang
+				//printf("%d\n",headPid->pid);
+				if (pidStatus!=0) {
+					headPid->working=0;
+					//if switch
+
 
 
 					strcpy(cmdToPrint,headPid->cmd);
