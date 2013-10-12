@@ -17,25 +17,29 @@
 
 
 void list_insert(const char* path, struct node **head) {
+	//create
 	struct node *newnode = malloc(sizeof(struct node));
 	char* pathFinal;
 	pathFinal = strdup(path);
 	newnode->path=pathFinal;
-
+	//insert
 	newnode->next=*head;
 	*head = newnode;
 }
 
 
 void list_insertPid(pid_t pid, struct node **head, const char* command) {
+	//create
 	struct node *newnode = malloc(sizeof(struct node));
 	int pidFinal = (int)malloc(sizeof(pid));
 	char* cmdFinal;
+	newnode->working =0;
 	cmdFinal = strdup(command);
 	pidFinal = pid;
 	newnode->pid=pidFinal;
 	newnode->cmd = cmdFinal;
 
+	//insert
 	newnode->next=*head;
 	*head = newnode;
 }
@@ -44,7 +48,7 @@ void readFile(struct node **head) {
 	char* line;
 	struct node *temp = NULL;
 	temp=*head;
-	size_t numberBytes=NULL;
+	size_t numberBytes;
 	FILE *datafile;
 	ssize_t read;
 	datafile = fopen("shell-config.txt","r");
@@ -65,28 +69,31 @@ void readFile(struct node **head) {
 int main(int argc, char **argv) {
 	//exit wont exit
 	//pid print on completetion is 0 and not pid
-	//prints prompt to often
-	//need to add the following commands: jobs, paus PID, resume PID
+	//need to add the following commands: paus PID, resume PID
+
 	char* cmt = "#";
-	char* cmdToPrint;
 	int exitSwitch = (int)malloc(sizeof(int));
 	exitSwitch=0;
 	int seq = 1;
 	int status;
+	char* cmdToPrint;
 	int i = 0;
 	pid_t parentPid= (pid_t)malloc(sizeof(pid_t)); 
 	int pidArray; 
 	int run = 1;
 	char buffer[1024];
 	char* cmttoken;
+	char* tempString;
+	int whichBuiltIn;
 	char **paths = (char **)malloc(sizeof(char**));
 	char **linefinal= (char **)malloc(sizeof(char**));
 	struct node *head = NULL;
 	struct node *headPid = NULL;
 	struct node *headPidTemp = NULL;
+	struct node *headPidTemp2 = NULL;
 	pid_t pidStatus;
 	readFile(&head);	//create linked list
-
+	int tempNum;
 	struct pollfd pfd;
 	pfd.fd = 0;
 	pfd.events = POLLIN;
@@ -99,14 +106,13 @@ int main(int argc, char **argv) {
 	fflush(stdout);
 	while (run) {
 	rv = poll(&pfd, 1, 100);
-	//while (fgets(buffer, 1024, stdin) !=NULL) {
 		if (rv == 0) { //if no typing
-			//printf("timeout\n");
 		}
 		else if (rv>0) { //if type something
 			printf("%s\n",""); 
 			fgets(buffer, 1024, stdin);
 			pidArray = fork();
+
 			list_insertPid(pidArray,&headPid,buffer);
 				cmttoken = strtok(buffer, cmt); //Nothing included after first '#'
 				linefinal = tokenify(cmttoken,";");
@@ -115,29 +121,24 @@ int main(int argc, char **argv) {
 			}	
 			if (pidArray==0) { //CHILD
 				//execute
-
 				if (seq == 1) {
-
-
 					sequential(linefinal,&head);
 				}
 				else{
 					parallel(linefinal,&head);
 				}
 
-				//while loop to check exit and mode switch after everything has run, commented out exitSwitch
+				//while loop to check exit and mode switch after everything has run
 				i=0;
 				while (linefinal[i]!=NULL){ //itterate the line sepearted by ;		
 					if (strncmp(linefinal[i],"exit",4)==0) {
 						exitSwitch = 1;
 					}
 					else if (strncmp(linefinal[i],"mode parallel",13)==0||strncmp(linefinal[i],"mode p",6)==0){
-						seq = 0;
-						printf("%s\n","YOU HAVE NOW ENTERED MODE PARALLEL");	
+						seq = 0;	
 					}
 					else if (strncmp(linefinal[i],"mode sequential",15)==0 || strncmp(linefinal[i],"mode s",6)==0){
 						seq = 1;
-						printf("%s\n","YOU HAVE NOW ENTERED MODE SEQUENTIAL");
 					}
 					else if (strncmp(linefinal[i],"mode",4)==0) {
 						if (seq == 0) {
@@ -152,64 +153,92 @@ int main(int argc, char **argv) {
 				if (exitSwitch==1){
 					run=0;
 				}
-				printf("%s","prompt>  ");
-			}
-			//else { //parent	
-				//do only once child ends
-				/*i=0;
-				while (linefinal[i]!=NULL){ //itterate the line sepearted by ;	
-					printf("%s","test:   ");
-					printf("%s\n",linefinal[i]);	
-					if (strncmp(linefinal[i],"exit",4)==0) {
-						exitSwitch = 1;
-					}
-					else if (strncmp(linefinal[i],"mode parallel",13)==0||strncmp(linefinal[i],"mode p",6)==0){
-						seq = 0;
-						printf("%s\n","YOU HAVE NOW ENTERED MODE PARALLEL");	
-					}
-					else if (strncmp(linefinal[i],"mode sequential",15)==0 || strncmp(linefinal[i],"mode s",6)==0){
-						seq = 1;
-						printf("%s\n","YOU HAVE NOW ENTERED MODE SEQUENTIAL");
-					}
-					else if (strncmp(linefinal[i],"mode",4)==0) {
-						if (seq == 0) {
-							printf("%s\n","Mode: Parallel");
-						}
-						if (seq == 1) {
-							printf("%s\n","Mode:  Sequential");
-						}
-					}
-					
-					if (exitSwitch==1){
-						run=0;
-					}
-					i++;
-				}*/	
-				//
-				headPidTemp = headPid;
-				while(headPid!=NULL) {	
-					pidStatus = waitpid(headPid->pid, &status, WNOHANG); //parent wait, without hang
-					if (pidStatus!=0) {
-						printf("%s\n","");
-						printf("%s","PROCESS: ");	
-						strcpy(cmdToPrint,headPid->cmd);
-						cmdToPrint[strlen(headPid->cmd)-1]='\0';//strip newline
-						printf("%d",headPid->pid);
-						printf("%s"," (");
-						printf("%s",cmdToPrint);
-						printf("%s\n",") COMPLETED");
-						printf("%s","prompt> ");
+			} //child end
+		
+			//loop to wait
+			i=0;
+			headPidTemp = headPid;
+			headPidTemp2 = headPid;
+			while(headPid!=NULL) {	
 
-						break;
+				pidStatus = waitpid(headPid->pid, &status, WNOHANG); //parent wait, without hang
+				//printf("%d\n",headPid->pid);
+				if (pidStatus!=0) {
+					headPid->working=0;
+					//if switch
+					while (linefinal[i]!=NULL){ //itterate the line sepearted by ;		
+						if (strncmp(linefinal[i],"exit",4)==0) {
+							exitSwitch = 1;
+						}
+						else if (strncmp(linefinal[i],"mode parallel",13)==0||strncmp(linefinal[i],"mode p",6)==0){
+							seq = 0;
+							printf("%s\n","YOU HAVE NOW ENTERED MODE PARALLEL");	
+						}
+						else if (strncmp(linefinal[i],"mode sequential",15)==0 || strncmp(linefinal[i],"mode s",6)==0){
+							seq = 1;
+							printf("%s\n","YOU HAVE NOW ENTERED MODE SEQUENTIAL");
+						}
+						else if (strncmp(linefinal[i],"mode",4)==0) {
+							if (seq == 0) {
+								printf("%s\n","Mode: Parallel");
+							}
+							if (seq == 1) {
+								printf("%s\n","Mode:  Sequential");
+							}
+						}
+						//jobs command
+						else if (strncmp(linefinal[i],"jobs",4)==0) {
+							printf("%s\n","RUNNING PROCESSES:: ");
+							while (headPidTemp!=NULL) {
+								if (headPidTemp->working==0) {
+									if (strncmp(headPidTemp->cmd,"jobs",4)==0){
+									}
+									else{
+										printf("%s","PROCESS: ");
+										printf("%d",headPidTemp->pid);
+										printf("%s","  CMD:  ");
+										printf("%s",headPidTemp->cmd);
+									}
+								}
+								headPidTemp = headPidTemp->next;
+							}
+							printf("%s\n","END OF RUNNING PROCESSES");
+						}
+						
+						else if (strncmp(linefinal[i],"pause",5)==0) {
+									printf("%s\n",linefinal[i]);
+									tempString = tokenify(linefinal[i]," ,\t");
+									//kill(linefinal[1], SIGSTOP);
+									printf("%s","HERE:  ");
+									printf("%s\n",tempString[1]);
+						}
+
+						headPidTemp = headPidTemp2;
+						i++;
+
 					}
-					if (headPid->next==NULL) {
-						headPid=headPidTemp;
-					}
-					headPid=headPid->next;
+
+
+					strcpy(cmdToPrint,headPid->cmd);
+					cmdToPrint[strlen(headPid->cmd)-1]='\0';//strip newline
+
+					printf("%s\n","");
+					printf("%s","PROCESS: ");	
+
+					printf("%d",headPid->pid);
+					printf("%s"," (");
+					printf("%s",cmdToPrint);
+					printf("%s\n",") COMPLETED");
+					printf("%s","prompt> ");
+					headPid->working = 1;
+					break;
 				}
-				headPid = headPidTemp;
+
+				headPid=headPid->next;
+			}
+			headPid = headPidTemp;
+			headPidTemp2 = headPid;
 			
-			//}
 			fflush(stdout);
 
 		}
@@ -325,8 +354,10 @@ void parallel (char** linefinal, struct node **head) { //use if parallel is call
 				if (pidArray[i]<0) { //if fork fail, error
 					perror("Fork ERROR"); //should we exit
 				}	
-				if (pidArray[i]==0) {
-					if (execv(arrayToExec[0], arrayToExec) < 0) {
+				else if (pidArray[i]==0) {//child
+					printf("%s\n",arrayToExec[0]);
+
+					 if (execv(arrayToExec[0], arrayToExec) < 0) {
 						fprintf(stderr, "execv failed: %s\n", strerror(errno));
 						exit(0);
 					}
@@ -335,6 +366,9 @@ void parallel (char** linefinal, struct node **head) { //use if parallel is call
 				}
 			}
 
+		}
+		else { //if built in (shouldn't be), exit
+			exit(0);
 		}
 		execute = 0;
 		i++;
@@ -352,23 +386,29 @@ int isBuiltIn(char* linefinal) {
 		return 1;
 	}
 	else if (strncmp(linefinal,"mode parallel",14)==0) {
-		return 1;
+		return 2;
 	}
 	else if (strncmp(linefinal,"mode p",6)==0) {
-		return 1;
+		return 3;
 	}
 	else if (strncmp(linefinal,"mode sequential",15)==0) {
-		return 1;
+		return 4;
 	}
 	else if (strncmp(linefinal,"mode s",6)==0) {
-		return 1;
+		return 5;
 	}
 	else if (strncmp(linefinal,"\n",2)==0) {
-		return 1;
+		return 6;
 	}
 	else if (strncmp(linefinal,"mode",4)==0){
-		return 1;
+		return 7;
 	}	
+	else if (strncmp(linefinal,"jobs",4)==0){
+		return 8;
+	}
+	else if (strncmp(linefinal,"pause",5)==0){
+		return 8;
+	}
 	return 0;
 }
 

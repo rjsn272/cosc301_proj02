@@ -3,8 +3,9 @@
 
 struct node {
     const char* path;
-	const char* cmd;
+	const char** cmd;
 	pid_t pid;
+	int working;
     struct node *next; 
 };
 
