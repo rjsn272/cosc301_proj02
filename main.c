@@ -67,10 +67,9 @@ void readFile(struct node **head) {
 }
 
 int main(int argc, char **argv) {
-	//exit wont exit
-	//pid print on completetion is 0 and not pid
-	//need to add the following commands: paus PID, resume PID
-
+	//exit wont exit out parent. It will exit out of child, but when try to exit out of parent
+	//crazy zombie process we never typed in will execute after ./proj02 exited (when you are
+	//back into the shell and out of our program).
 	char* cmt = "#";
 	int exitSwitch = (int)malloc(sizeof(int));
 	exitSwitch=0;
