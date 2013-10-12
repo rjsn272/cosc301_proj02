@@ -238,7 +238,6 @@ int main(int argc, char **argv) {
 			}
 			headPid = headPidTemp;
 			headPidTemp2 = headPid;
-			
 			fflush(stdout);
 
 		}
