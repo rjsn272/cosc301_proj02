@@ -80,6 +80,7 @@ int main(int argc, char **argv) {
 	int i = 0;
 	pid_t parentPid= (pid_t)malloc(sizeof(pid_t)); 
 	int pidArray; 
+	int killv;
 	int run = 1;
 	char buffer[1024];
 	char* cmttoken;
@@ -197,16 +198,18 @@ int main(int argc, char **argv) {
 						}
 						
 						else if (strncmp(linefinal[i],"pause",5)==0) {
-									tempString = tokenify(linefinal[i]," ,\t");
-									kill(tempString[1], SIGSTOP);
-									printf("%s","PAUSED PROCESS:  ");
-									printf("%s\n",tempString[1]);
+						    tempString = tokenify(linefinal[i]," ,\t");
+						    killv = kill(atoi(tempString[1]), SIGSTOP);
+						    printf("%s","Kill Value: ");
+						    printf("%d\n",killv);
+						    printf("%s","PAUSED PROCESS:  ");
+						    printf("%s\n",tempString[1]);
 						}
-						else if (strncmp(linefinal[i],"pause",5)==0) {
-									tempString = tokenify(linefinal[i]," ,\t");
-									kill(tempString[1], SIGSTOP);
-									printf("%s","PAUSED PROCESS:  ");
-									printf("%s\n",tempString[1]);
+						else if (strncmp(linefinal[i],"resume",6)==0) {
+						    tempString = tokenify(linefinal[i]," ,\t");
+						    kill(atoi(tempString[1]), SIGCONT);
+						    printf("%s","RESUME PROCESS:  ");
+						    printf("%s\n",tempString[1]);
 						}
 
 						headPidTemp = headPidTemp2;
