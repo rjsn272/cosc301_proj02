@@ -114,7 +114,6 @@ int main(int argc, char **argv) {
 			printf("%s\n",""); 
 			fgets(buffer, 1024, stdin);
 			pidArray = fork();
-			printf("%d\n",pidArray);
 			list_insertPid(pidArray,&headPid,buffer);
 				cmttoken = strtok(buffer, cmt); //Nothing included after first '#'
 				linefinal = tokenify(cmttoken,";");
@@ -200,8 +199,6 @@ int main(int argc, char **argv) {
 						else if (strncmp(linefinal[i],"pause",5)==0) {
 						    tempString = tokenify(linefinal[i]," ,\t");
 						    killv = kill(atoi(tempString[1]), SIGSTOP);
-						    printf("%s","Kill Value: ");
-						    printf("%d\n",killv);
 						    printf("%s","PAUSED PROCESS:  ");
 						    printf("%s\n",tempString[1]);
 						}
@@ -225,7 +222,6 @@ int main(int argc, char **argv) {
 			while(headPid!=NULL) {	
 
 				pidStatus = waitpid(headPid->pid, &status, WNOHANG); //parent wait, without hang
-				//printf("%d\n",headPid->pid);
 				if (pidStatus!=0) {
 					headPid->working=0;
 					//if switch
